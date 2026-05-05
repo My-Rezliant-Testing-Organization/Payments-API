@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,9 +9,12 @@ using StoreAPI.DAL;
 using StoreAPI.DAL.DBModels;
 using StoreAPI.Models;
 using NLog;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StoreAPI.Controllers
 {
+    // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Added role-based authorization to protect API endpoints
+    [Authorize] // Require authentication for all endpoints
     [Produces("application/json")]
     [Route("api/Store/[action]")]
     public class StoreController : Controller
@@ -24,6 +27,8 @@ namespace StoreAPI.Controllers
             _storeContext = storeContext;
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Added authorization for authenticated users
+        [Authorize(Roles = "User,Admin")]
         [HttpGet]
         public ActionResult GetStoreItems()
         {
@@ -31,6 +36,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(_storeContext.StoreItems.ToList());
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public ActionResult CreateStoreItem([FromBody] StoreItemTable item)
         {
@@ -41,6 +48,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(item);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> EditStoreItem([FromBody] StoreItemTable item)
         {
@@ -57,6 +66,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(storeItem);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> ConfirmEditItem([FromBody] StoreItemTable item)
         {
@@ -72,6 +83,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(storeItem);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> DeleteItem([FromBody] StoreItemTable item)
         {
@@ -88,6 +101,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(storeItem);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> ConfirmDeleteItem([FromBody] StoreItemTable item)
         {
@@ -99,6 +114,8 @@ namespace StoreAPI.Controllers
             return new ObjectResult(storeItem);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Added authorization for authenticated users
+        [Authorize]
         [HttpPost]
         public ActionResult CheckoutBasket([FromBody] List<PurcahseItemReq> purchases)
         {
@@ -127,9 +144,17 @@ namespace StoreAPI.Controllers
             return Ok(new EmptyResp());
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Added user identity validation
+        [Authorize]
         [HttpGet]
         public ActionResult GetAllPurchases([FromQuery] string user)
         {
+            // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Validate that authenticated user matches requested user
+            if (User.Identity.Name != user && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
             var purchaseItems = _storeContext.Purchases
                 .Where(purchase => purchase.Username == user)
                 .OrderBy(purchase => purchase.DateTimePurchased)
@@ -152,6 +177,8 @@ namespace StoreAPI.Controllers
             return Ok(purchases);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Restricted to Admin role only
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public ActionResult AdminGetAllPurchases()
         {
@@ -175,6 +202,8 @@ namespace StoreAPI.Controllers
             return Ok(purchases);
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:59 GMT, Added authorization for authenticated users
+        [Authorize]
         [HttpPost]
         public int GetPurchaseId([FromBody] User user)
         {
