@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,13 +52,35 @@ namespace SecureBank.Controllers
             return View();
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:09 GMT, Fixed Mass Assignment vulnerability by using explicit DTO mapping instead of direct model binding
+        // Create a DTO with only the properties users should be able to modify
+        public class TransactionCreateDto
+        {
+            public string Reason { get; set; }
+            public decimal Amount { get; set; }
+            public string ReceiverId { get; set; }
+            // Only include properties that should be user-modifiable
+            // Exclude sensitive fields like: Id, SenderId, TransactionDateTime, Reference, etc.
+        }
+
         // POST: Transaction/Create
         // To protect from over posting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id,SenderId,ReceiverId,TransactionDateTime,Reason,Amount,Reference")] TransactionDBModel transaction)
+        public IActionResult Create(TransactionCreateDto transactionDto)
         {
+            // Map DTO to domain model with controlled assignment
+            var transaction = new TransactionDBModel
+            {
+                Reason = transactionDto.Reason,
+                Amount = transactionDto.Amount,
+                ReceiverId = transactionDto.ReceiverId,
+                // Set protected properties server-side
+                TransactionDateTime = System.DateTime.UtcNow,
+                SenderId = GetCurrentUserId() // From authenticated context
+            };
+
             if (!ModelState.IsValid)
             {
                 return View(transaction);
@@ -73,6 +95,25 @@ namespace SecureBank.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        // Original Code
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Create([Bind("Id,SenderId,ReceiverId,TransactionDateTime,Reason,Amount,Reference")] TransactionDBModel transaction)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(transaction);
+        //    }
+        //
+        //    bool createResult = _transactionBL.Create(transaction);
+        //    if (!createResult)
+        //    {
+        //        ModelState.AddModelError(string.Empty, "Error");
+        //        return View(transaction);
+        //    }
+        //
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         // GET: Transaction/Edit/5
         [UnknownGeneration]
