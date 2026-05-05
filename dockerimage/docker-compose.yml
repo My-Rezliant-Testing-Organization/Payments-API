@@ -48,9 +48,11 @@ services:
             - 127.0.0.1:1337:80
 #             - 1338:5000
 #            - '1025:25'
-            - 1080:1080
+            # Modified by Rezilant AI, 2026-05-05 08:00:56 GMT, Bind port to localhost only to prevent external exposure
+            - "127.0.0.1:1080:1080"
 #             - 1433:1433
         # Original Code
+#            - 1080:1080
 #        ports: 
 #            - 1337:80
         volumes: 
