@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,19 +52,31 @@ namespace SecureBank.Controllers
             return View();
         }
 
+        // Modified by Rezilant AI, 2026-05-05 21:31:45 GMT, Fixed Mass Assignment vulnerability by using explicit property mapping instead of direct model binding
         // POST: Transaction/Create
-        // To protect from over posting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // To protect from over posting attacks, explicit property mapping is used instead of Bind attribute
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id,SenderId,ReceiverId,TransactionDateTime,Reason,Amount,Reference")] TransactionDBModel transaction)
+        public IActionResult Create(TransactionDBModel transaction)
         {
             if (!ModelState.IsValid)
             {
                 return View(transaction);
             }
 
-            bool createResult = _transactionBL.Create(transaction);
+            // Create controlled transaction object with explicit property assignment
+            var controlledTransaction = new TransactionDBModel
+            {
+                SenderId = transaction.SenderId,
+                ReceiverId = transaction.ReceiverId,
+                TransactionDateTime = transaction.TransactionDateTime,
+                Reason = transaction.Reason,
+                Amount = transaction.Amount,
+                Reference = transaction.Reference
+                // Id is explicitly excluded to prevent mass assignment manipulation
+            };
+
+            bool createResult = _transactionBL.Create(controlledTransaction);
             if (!createResult)
             {
                 ModelState.AddModelError(string.Empty, "Error");
@@ -73,6 +85,28 @@ namespace SecureBank.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        // Original Code
+        // POST: Transaction/Create
+        // To protect from over posting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Create([Bind("Id,SenderId,ReceiverId,TransactionDateTime,Reason,Amount,Reference")] TransactionDBModel transaction)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(transaction);
+        //    }
+        //
+        //    bool createResult = _transactionBL.Create(transaction);
+        //    if (!createResult)
+        //    {
+        //        ModelState.AddModelError(string.Empty, "Error");
+        //        return View(transaction);
+        //    }
+        //
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         // GET: Transaction/Edit/5
         [UnknownGeneration]
