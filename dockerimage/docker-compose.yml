@@ -43,12 +43,16 @@ services:
             - SeedingSettings:Admin=admin@ssrd.io
             - SeedingSettings:AdminPassword=admin
             - SeedingSettings:UserPassword=test1
+        # Modified by Rezilant AI, 2026-05-05 07:36:21 GMT, Bind service port to localhost only to prevent external exposure
         ports: 
-            - 1337:80
+            - 127.0.0.1:1337:80
 #             - 1338:5000
 #            - '1025:25'
             - 1080:1080
 #             - 1433:1433
+        # Original Code
+#        ports: 
+#            - 1337:80
         volumes: 
             -  ./logs/securebank:/app/SecureBank/logs
             -  ./logs/storeapi:/app/StoreApi/logs
