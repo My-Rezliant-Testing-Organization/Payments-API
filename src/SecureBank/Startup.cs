@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -41,11 +41,11 @@ namespace SecureBank
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            AppSettings appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
+            AppSettings appSettings = Configuration.GetSection("AppSettings").Get&lt;AppSettings>();
 
             if (appSettings != null)
             {
-                services.Configure<AppSettings>(options =>
+                services.Configure&lt;AppSettings>(options =>
                 {
                     options.StoreEndpoint = appSettings.StoreEndpoint;
                     options.SmtpCredentials = appSettings.SmtpCredentials;
@@ -59,7 +59,7 @@ namespace SecureBank
             }
 
 
-            DatabaseSettings customerDbSettings = Configuration.GetSection("DatabaseConnections:SecureBankMSSQL").Get<DatabaseSettings>();
+            DatabaseSettings customerDbSettings = Configuration.GetSection("DatabaseConnections:SecureBankMSSQL").Get&lt;DatabaseSettings>();
             if (customerDbSettings != null)
             {              
                 string customerConnectionString = string.Format("Server={0},{1};Database={2};User Id={3};Password={4}",
@@ -70,31 +70,31 @@ namespace SecureBank
                     customerDbSettings.UserPass);
                 _logger.Info(customerConnectionString);
                 // configure mssql
-                services.AddDbContext<PortalDBContext>(options => options.UseSqlServer(customerConnectionString));
+                services.AddDbContext&lt;PortalDBContext>(options => options.UseSqlServer(customerConnectionString));
             }
             else
             {
                 //configure sqlite
-                services.AddDbContext<PortalDBContext>(options => options.UseSqlite("Filename=./customerDB.db"));
+                services.AddDbContext&lt;PortalDBContext>(options => options.UseSqlite("Filename=./customerDB.db"));
             }
 
-            services.AddTransient<IActionContextAccessor, ActionContextAccessor>();
+            services.AddTransient&lt;IActionContextAccessor, ActionContextAccessor>();
 
-            services.AddTransient<ITransactionDAO, TransactionDAO>();
-            services.AddTransient<IUserDAO, UserDAO>();
-            services.AddTransient<IDbInitializer, DbInitializer>();
+            services.AddTransient&lt;ITransactionDAO, TransactionDAO>();
+            services.AddTransient&lt;IUserDAO, UserDAO>();
+            services.AddTransient&lt;IDbInitializer, DbInitializer>();
 
-            services.AddScoped<StoreAPICalls>();
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddScoped&lt;StoreAPICalls>();
+            services.AddTransient&lt;IEmailSender, EmailSender>();
 
-            services.AddScoped<IUserBL, UserBL>();
-            services.AddScoped<ITransactionBL, TransactionBL>();
-            services.AddScoped<IStoreBL, StoreBL>();
-            services.AddScoped<IPortalSearchBL, PortalSearchBL>();
-            services.AddScoped<IAuthBL, AuthBL>();
-            services.AddScoped<IUploadFileBL, UploadFileBL>();
-            services.AddScoped<IAdminBL, AdminBL>();
-            services.AddScoped<IAdminStoreBL, AdminStoreBL>();
+            services.AddScoped&lt;IUserBL, UserBL>();
+            services.AddScoped&lt;ITransactionBL, TransactionBL>();
+            services.AddScoped&lt;IStoreBL, StoreBL>();
+            services.AddScoped&lt;IPortalSearchBL, PortalSearchBL>();
+            services.AddScoped&lt;IAuthBL, AuthBL>();
+            services.AddScoped&lt;IUploadFileBL, UploadFileBL>();
+            services.AddScoped&lt;IAdminBL, AdminBL>();
+            services.AddScoped&lt;IAdminStoreBL, AdminStoreBL>();
 
             services.AddAuthorization(options => 
             {
@@ -104,10 +104,10 @@ namespace SecureBank
                 options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
             });
 
-            services.AddSingleton<IAuthorizeService, AuthorizeService>();
-            services.AddSingleton<IUserExtensions, UserExtensions>();
+            services.AddSingleton&lt;IAuthorizeService, AuthorizeService>();
+            services.AddSingleton&lt;IUserExtensions, UserExtensions>();
 
-            services.AddSingleton<ICookieService, CookieService>();
+            services.AddSingleton&lt;ICookieService, CookieService>();
 
             CtfOptions ctfOptions = null;
 
@@ -142,11 +142,23 @@ namespace SecureBank
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            AppSettings appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
+            AppSettings appSettings = Configuration.GetSection("AppSettings").Get&lt;AppSettings>();
 
-            CtfOptions ctfOptions = app.ApplicationServices.GetRequiredService<IOptions<CtfOptions>>().Value;
+            CtfOptions ctfOptions = app.ApplicationServices.GetRequiredService&lt;IOptions&lt;CtfOptions>>().Value;
 
-            app.UseDeveloperExceptionPage();
+            // Modified by Rezilant AI, 2026-05-05 19:02:03 GMT, Restrict developer exception page to development environment only
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
+
+            // Original Code
+            //app.UseDeveloperExceptionPage();
 
             app.UseSwagger();
             app.UseSwaggerUI(x =>
